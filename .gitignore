@@ -1,0 +1,25 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, build with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Ignore the built binary
+/cert-manager-webhook-pdns
+
+# Ignore test binaries
+_out/
+
+# Ignore local config
+apiserver.local.config/
+
+# Test secrets
+testdata/pdns/config.json
+testdata/pdns/apikey.yml

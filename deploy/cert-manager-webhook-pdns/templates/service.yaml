@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "cert-manager-webhook-pdns.fullname" . }}
+  labels:
+    app: {{ include "cert-manager-webhook-pdns.name" . }}
+    chart: {{ include "cert-manager-webhook-pdns.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: https
+      protocol: TCP
+      name: https
+  selector:
+    app: {{ include "cert-manager-webhook-pdns.name" . }}
+    release: {{ .Release.Name }}

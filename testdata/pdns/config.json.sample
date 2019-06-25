@@ -1,0 +1,8 @@
+{
+    "host": "https://pdns.example.com",
+    "apiKeySecretRef": {
+        "name": "pdns-api-key",
+        "key": "key"
+    },
+    "ttl": 10
+}
