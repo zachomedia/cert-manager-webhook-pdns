@@ -1,54 +1,101 @@
-# ACME webhook example
+# PowerDNS cert-manager ACME webhook
 
-The ACME issuer type supports an optional 'webhook' solver, which can be used
-to implement custom DNS01 challenge solving logic.
+## Installing
 
-This is useful if you need to use cert-manager with a DNS provider that is not
-officially supported in cert-manager core.
+To install with helm, run:
 
-## Why not in core?
+```bash
+$ git clone https://github.com/zachomedia/cert-manager-webhook-pdns.git
+$ cd cert-manager-webhook-pdns/deploy/cert-manager-webhook-pdns
+$ helm install --name cert-manager-webhook-pdns .
+```
 
-As the project & adoption has grown, there has been an influx of DNS provider
-pull requests to our core codebase. As this number has grown, the test matrix
-has become un-maintainable and so, it's not possible for us to certify that
-providers work to a sufficient level.
+Without helm, run:
 
-By creating this 'interface' between cert-manager and DNS providers, we allow
-users to quickly iterate and test out new integrations, and then packaging
-those up themselves as 'extensions' to cert-manager.
+```bash
+$ make rendered-manifest.yaml
+$ kubectl apply -f _out/rendered-manifest.yaml
+```
 
-We can also then provide a standardised 'testing framework', or set of
-conformance tests, which allow us to validate the a DNS provider works as
-expected.
+### Issuer/ClusterIssuer
 
-## Creating your own webhook
+An example issuer:
 
-Webhook's themselves are deployed as Kubernetes API services, in order to allow
-administrators to restrict access to webhooks with Kubernetes RBAC.
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: pdns-api-key
+type: Opaque
+data:
+  key: APIKEY_BASE64
+---
+apiVersion: certmanager.k8s.io/v1alpha1
+kind: Issuer
+metadata:
+  name: letsencrypt-staging
+spec:
+  acme:
+    email: certmaster@example.com
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: letsencrypt-staging-account-key
+    dns01:
+      providers:
+        - name: dns
+          webhook:
+            groupName: acme.zacharyseguin.ca
+            solverName: pdns
+            config:
+              host: https://ns1.example.com
+              apiKeySecretRef:
+                name: pdns-api-key
+                key: key
 
-This is important, as otherwise it'd be possible for anyone with access to your
-webhook to complete ACME challenge validations and obtain certificates.
+              # Optional config, shown with default values
+              #   all times in seconds
+              ttl: 120
+              timeout: 30
+              propagationTimeout: 120
+              pollingInterval: 2
+```
 
-To make the set up of these webhook's easier, we provide a template repository
-that can be used to get started quickly.
+And then you can issue a cert:
 
-### Creating your own repository
+```yaml
+apiVersion: certmanager.k8s.io/v1alpha1
+kind: Certificate
+metadata:
+  name: test-zacharyseguin-ca
+  namespace: default
+spec:
+  secretName: example-com-tls
+  commonName: example.com
+  dnsNames:
+  - example.com
+  - www.example.com
+  issuerRef:
+    name: letsencrypt-staging
+    kind: Issuer
+  acme:
+    config:
+      - dns01:
+          provider: dns
+        domains:
+          - example.com
+          - www.example.com
+
+```
+
+## Development
 
 ### Running the test suite
 
-All DNS providers **must** run the DNS01 provider conformance testing suite,
-else they will have undetermined behaviour when used with cert-manager.
-
-**It is essential that you configure and run the test suite when creating a
-DNS01 webhook.**
-
-An example Go test file has been provided in [main_test.go]().
-
 You can run the test suite with:
 
-```bash
-$ TEST_ZONE_NAME=example.com go test .
-```
+1. Copy `testdata/pdns/apikey.yml.sample` and `testdata/pdns/config.json.sample` and fill in the appropriate values
 
-The example file has a number of areas you must fill in and replace with your
-own options in order for tests to pass.
+```bash
+$ ./scripts/fetch-test-binaries.sh
+$ TEST_ZONE_NAME=example.com. go test .
+```
