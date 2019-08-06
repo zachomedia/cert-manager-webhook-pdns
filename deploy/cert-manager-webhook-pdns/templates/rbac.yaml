@@ -14,6 +14,46 @@ metadata:
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: RoleBinding
 metadata:
+  name: {{ include "cert-manager-webhook-pdns.fullname" . }}
+  labels:
+    app: {{ include "cert-manager-webhook-pdns.name" . }}
+    chart: {{ include "cert-manager-webhook-pdns.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "cert-manager-webhook-pdns.fullname" . }}
+subjects:
+  - apiGroup: ""
+    kind: ServiceAccount
+    name: {{ include "cert-manager-webhook-pdns.fullname" . }}
+    namespace: {{ .Release.Namespace }}
+---
+# Grant cert-manager permission to validate using our apiserver
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: Role
+metadata:
+  name: {{ include "cert-manager-webhook-pdns.fullname" . }}
+  labels:
+    app: {{ include "cert-manager-webhook-pdns.name" . }}
+    chart: {{ include "cert-manager-webhook-pdns.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+rules:
+  - apiGroups:
+      - ''
+    resources:
+      - 'secrets'
+    verbs:
+      - 'get'
+---
+# Grant the webhook permission to read the ConfigMap containing the Kubernetes
+# apiserver's requestheader-ca-certificate.
+# This ConfigMap is automatically created by the Kubernetes apiserver.
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
+metadata:
   name: {{ include "cert-manager-webhook-pdns.fullname" . }}:webhook-authentication-reader
   namespace: kube-system
   labels:
