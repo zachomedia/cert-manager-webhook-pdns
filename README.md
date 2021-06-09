@@ -30,7 +30,7 @@ type: Opaque
 data:
   key: APIKEY_BASE64
 ---
-apiVersion: certmanager.k8s.io/v1alpha1
+apiVersion: cert-manager.io/v1alpha3
 kind: Issuer
 metadata:
   name: letsencrypt-staging
@@ -40,24 +40,23 @@ spec:
     server: https://acme-staging-v02.api.letsencrypt.org/directory
     privateKeySecretRef:
       name: letsencrypt-staging-account-key
-    dns01:
-      providers:
-        - name: dns
-          webhook:
-            groupName: acme.zacharyseguin.ca
-            solverName: pdns
-            config:
-              host: https://ns1.example.com
-              apiKeySecretRef:
-                name: pdns-api-key
-                key: key
+    solvers:
+    - dns01:
+        webhook:
+          groupName: acme.zacharyseguin.ca
+          solverName: pdns
+          config:
+            host: https://ns1.example.com
+            apiKeySecretRef:
+              name: pdns-api-key
+              key: key
 
-              # Optional config, shown with default values
-              #   all times in seconds
-              ttl: 120
-              timeout: 30
-              propagationTimeout: 120
-              pollingInterval: 2
+            # Optional config, shown with default values
+            #   all times in seconds
+            ttl: 120
+            timeout: 30
+            propagationTimeout: 120
+            pollingInterval: 2
 ```
 
 And then you can issue a cert:
