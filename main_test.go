@@ -8,8 +8,7 @@ import (
 )
 
 var (
-	zone               = os.Getenv("TEST_ZONE_NAME")
-	kubeBuilderBinPath = "./_out/kubebuilder/bin"
+	zone = os.Getenv("TEST_ZONE_NAME")
 )
 
 func TestRunsSuite(t *testing.T) {
@@ -18,7 +17,7 @@ func TestRunsSuite(t *testing.T) {
 	// ChallengeRequest passed as part of the test cases.
 
 	fixture := dns.NewFixture(&powerDNSProviderSolver{},
-		dns.SetBinariesPath(kubeBuilderBinPath),
+		dns.SetDNSServer("192.168.20.2:53"),
 		dns.SetResolvedZone(zone),
 		dns.SetAllowAmbientCredentials(false),
 		dns.SetManifestPath("testdata/pdns"),

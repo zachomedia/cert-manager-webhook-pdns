@@ -97,5 +97,5 @@ You can run the test suite with:
 
 ```bash
 $ ./scripts/fetch-test-binaries.sh
-$ TEST_ZONE_NAME=example.com. go test .
+$ TEST_ASSET_ETCD=_out/kubebuilder/bin/etcd TEST_ASSET_KUBE_APISERVER=_out/kubebuilder/bin/kube-apiserver TEST_ASSET_KUBECTL=_out/kubebuilder/bin/kubectl TEST_ZONE_NAME=example.com. go test .
 ```

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -8,13 +9,14 @@ import (
 	"os"
 	"time"
 
-	extapi "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	extapi "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
 	"github.com/jetstack/cert-manager/pkg/acme/webhook/apis/acme/v1alpha1"
 	"github.com/jetstack/cert-manager/pkg/acme/webhook/cmd"
-	certmanagerv1 "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha1"
+
+	cmmeta "github.com/jetstack/cert-manager/pkg/apis/meta/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	pdns "github.com/zachomedia/cert-manager-webhook-pdns/provider"
@@ -66,8 +68,8 @@ type powerDNSProviderSolver struct {
 // be used by your provider here, you should reference a Kubernetes Secret
 // resource and fetch these credentials using a Kubernetes clientset.
 type powerDNSProviderConfig struct {
-	Host            string                          `json:"host"`
-	APIKeySecretRef certmanagerv1.SecretKeySelector `json:"apiKeySecretRef"`
+	Host            string                    `json:"host"`
+	APIKeySecretRef *cmmeta.SecretKeySelector `json:"apiKeySecretRef"`
 
 	// +optional
 	TTL int `json:"ttl"`
@@ -111,7 +113,8 @@ func (c *powerDNSProviderSolver) provider(cfg *powerDNSProviderConfig, namespace
 		return nil, err
 	}
 
-	sec, err := c.client.CoreV1().Secrets(namespace).Get(cfg.APIKeySecretRef.LocalObjectReference.Name, metav1.GetOptions{})
+	//c.client.CoreV1().Secrets(namespace).Get("")
+	sec, err := c.client.CoreV1().Secrets(namespace).Get(context.TODO(), cfg.APIKeySecretRef.LocalObjectReference.Name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
