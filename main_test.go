@@ -8,7 +8,8 @@ import (
 )
 
 var (
-	zone = os.Getenv("TEST_ZONE_NAME")
+	zone      = os.Getenv("TEST_ZONE_NAME")
+	dnsServer = getEnv("TEST_DNS_SERVER", "8.8.8.8:53")
 )
 
 func TestRunsSuite(t *testing.T) {
@@ -17,7 +18,7 @@ func TestRunsSuite(t *testing.T) {
 	// ChallengeRequest passed as part of the test cases.
 
 	fixture := dns.NewFixture(&powerDNSProviderSolver{},
-		dns.SetDNSServer("192.168.20.2:53"),
+		dns.SetDNSServer(dnsServer),
 		dns.SetResolvedZone(zone),
 		dns.SetAllowAmbientCredentials(false),
 		dns.SetManifestPath("testdata/pdns"),
@@ -25,4 +26,11 @@ func TestRunsSuite(t *testing.T) {
 	)
 
 	fixture.RunConformance(t)
+}
+
+func getEnv(key, fallback string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+	return fallback
 }
