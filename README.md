@@ -95,7 +95,14 @@ You can run the test suite with:
 
 1. Copy `testdata/pdns/apikey.yml.sample` and `testdata/pdns/config.json.sample` and fill in the appropriate values
 
+2. Run tests
 ```bash
 $ ./scripts/fetch-test-binaries.sh
-$ TEST_ZONE_NAME=example.com. go test .
+$ TEST_ASSET_ETCD=_out/kubebuilder/bin/etcd TEST_ASSET_KUBE_APISERVER=_out/kubebuilder/bin/kube-apiserver TEST_ASSET_KUBECTL=_out/kubebuilder/bin/kubectl TEST_ZONE_NAME=example.com. go test .
+```
+
+It is possible to use an alternative DNS-Server to check for propagation - just set the ENV variable TEST_DNS_SERVER accordingly
+
+```bash
+$ TEST_ASSET_ETCD=_out/kubebuilder/bin/etcd TEST_ASSET_KUBE_APISERVER=_out/kubebuilder/bin/kube-apiserver TEST_ASSET_KUBECTL=_out/kubebuilder/bin/kubectl TEST_DNS_SERVER="192.168.1.1:53" TEST_ZONE_NAME=example.com. go test .
 ```
