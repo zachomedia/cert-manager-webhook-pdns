@@ -12,7 +12,7 @@ metadata:
 # apiserver's requestheader-ca-certificate.
 # This ConfigMap is automatically created by the Kubernetes apiserver.
 apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
+kind: ClusterRoleBinding
 metadata:
   name: {{ include "cert-manager-webhook-pdns.fullname" . }}
   labels:
@@ -22,7 +22,7 @@ metadata:
     heritage: {{ .Release.Service }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
-  kind: Role
+  kind: ClusterRole
   name: {{ include "cert-manager-webhook-pdns.fullname" . }}
 subjects:
   - apiGroup: ""
@@ -32,7 +32,7 @@ subjects:
 ---
 # Grant cert-manager permission to validate using our apiserver
 apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
+kind: ClusterRole
 metadata:
   name: {{ include "cert-manager-webhook-pdns.fullname" . }}
   labels:
