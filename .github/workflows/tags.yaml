@@ -6,7 +6,7 @@ on:
 
 jobs:
   # Any checks that run pre-build
-  pre-build-checks:
+  build-and-publish:
     runs-on: ubuntu-latest
     steps:
       -

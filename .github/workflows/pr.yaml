@@ -4,7 +4,7 @@ on:
 
 jobs:
   # Any checks that run pre-build
-  pre-build-checks:
+  verify:
     runs-on: ubuntu-latest
     steps:
       -
