@@ -23,9 +23,9 @@ jobs:
         id: meta
         uses: crazy-max/ghaction-docker-meta@v2
         with:
-          images: zachomedia/cert-manager-webhook-dns
+          images: zachomedia/cert-manager-webhook-pdns
           labels: |
-            org.opencontainers.image.licenses=https://github.com/zachomedia/cert-manager-webhook-dns/blob/${{ env.GIT_SHA }}/LICENSE
+            org.opencontainers.image.licenses=https://github.com/zachomedia/cert-manager-webhook-pdns/blob/${{ env.GIT_SHA }}/LICENSE
       -
         name: Login to DockerHub
         uses: docker/login-action@v1
