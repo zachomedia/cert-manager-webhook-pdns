@@ -38,7 +38,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: zachomedia/cert-manager-webhook-dns:${{ env.TAG }}
+          tags: zachomedia/cert-manager-webhook-pdns:${{ env.TAG }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             VERSION=${{ env.TAG }}
