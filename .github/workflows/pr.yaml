@@ -1,0 +1,45 @@
+name: 'Build pull request'
+on:
+  - pull_request
+
+jobs:
+  # Any checks that run pre-build
+  pre-build-checks:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v2
+      -
+        name: Set environment variables
+        shell: bash
+        run: |
+          echo "TAG=${GITHUB_SHA}" >> $GITHUB_ENV
+          echo "GIT_SHA=${GITHUB_SHA}" >> $GITHUB_ENV
+      -
+        name: Docker meta
+        id: meta
+        uses: crazy-max/ghaction-docker-meta@v2
+        with:
+          images: zachomedia/cert-manager-webhook-pdns
+          labels: |
+            org.opencontainers.image.licenses=https://github.com/zachomedia/ingress-istio-controller/blob/${{ env.GIT_SHA }}/LICENSE
+      -
+        name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      -
+        name: Build
+        id: docker_build
+        uses: docker/build-push-action@v2
+        with:
+          push: false
+          tags: zachomedia/cert-manager-webhook-pdns:${{ env.TAG }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            VERSION=${{ env.TAG }}
+      -
+        name: Image digest
+        run: echo ${{ steps.docker_build.outputs.digest }}
