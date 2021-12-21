@@ -5,9 +5,8 @@
 To install with helm, run:
 
 ```bash
-$ git clone https://github.com/zachomedia/cert-manager-webhook-pdns.git
-$ cd cert-manager-webhook-pdns/deploy/cert-manager-webhook-pdns
-$ helm install --name cert-manager-webhook-pdns .
+$ helm repo add cert-manager-webhook-pdns https://zachomedia.github.io/cert-manager-webhook-pdns
+$ helm install cert-manager-webhook-pdns cert-manager-webhook-pdns/cert-manager-webhook-pdns
 ```
 
 Without helm, run:
@@ -30,24 +29,23 @@ type: Opaque
 data:
   key: APIKEY_BASE64
 ---
-apiVersion: certmanager.k8s.io/v1alpha1
+apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
   name: letsencrypt-staging
 spec:
   acme:
-    email: certmaster@example.com
+    email: certificates@example.ca
     server: https://acme-staging-v02.api.letsencrypt.org/directory
     privateKeySecretRef:
       name: letsencrypt-staging-account-key
-    dns01:
-      providers:
-        - name: dns
+    solvers:
+      - dns01:
           webhook:
             groupName: acme.zacharyseguin.ca
             solverName: pdns
             config:
-              host: https://ns1.example.com
+              host: https://ns1.example.ca
               apiKeySecretRef:
                 name: pdns-api-key
                 key: key
@@ -63,28 +61,20 @@ spec:
 And then you can issue a cert:
 
 ```yaml
-apiVersion: certmanager.k8s.io/v1alpha1
+apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: test-zacharyseguin-ca
+  name: test-example-ca
   namespace: default
 spec:
   secretName: example-com-tls
-  commonName: example.com
   dnsNames:
-  - example.com
-  - www.example.com
+  - example.ca
+  - www.example.ca
   issuerRef:
     name: letsencrypt-staging
     kind: Issuer
-  acme:
-    config:
-      - dns01:
-          provider: dns
-        domains:
-          - example.com
-          - www.example.com
-
+    group: cert-manager.io
 ```
 
 ## Development
