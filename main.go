@@ -5,11 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net/url"
+	"net/http"
 	"os"
 	"time"
 
-	extapi "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
@@ -19,7 +19,7 @@ import (
 	cmmeta "github.com/jetstack/cert-manager/pkg/apis/meta/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	pdns "github.com/zachomedia/cert-manager-webhook-pdns/provider"
+	"github.com/joeig/go-powerdns/v3"
 )
 
 var GroupName = os.Getenv("GROUP_NAME")
@@ -76,12 +76,6 @@ type powerDNSProviderConfig struct {
 
 	// +optional
 	Timeout int `json:"timeout"`
-
-	// +optional
-	PropagationTimeout int `json:"propagationTimeout"`
-
-	// +optional
-	PollingInterval int `json:"pollingInterval"`
 }
 
 // Name is used as the name for this DNS solver when referencing it on the ACME
@@ -94,86 +88,42 @@ func (c *powerDNSProviderSolver) Name() string {
 	return "pdns"
 }
 
-func (c *powerDNSProviderSolver) validate(cfg *powerDNSProviderConfig) error {
-	// Check that the host is defined
-	if cfg.Host == "" {
-		return errors.New("No PowerDNS host provided")
-	}
-
-	// Try to load the API key
-	if cfg.APIKeySecretRef.LocalObjectReference.Name == "" {
-		return errors.New("No PowerDNS API key provided")
-	}
-
-	return nil
-}
-
-func (c *powerDNSProviderSolver) provider(cfg *powerDNSProviderConfig, namespace string) (*pdns.DNSProvider, error) {
-	if err := c.validate(cfg); err != nil {
-		return nil, err
-	}
-
-	//c.client.CoreV1().Secrets(namespace).Get("")
-	sec, err := c.client.CoreV1().Secrets(namespace).Get(context.TODO(), cfg.APIKeySecretRef.LocalObjectReference.Name, metav1.GetOptions{})
-	if err != nil {
-		return nil, err
-	}
-
-	secBytes, ok := sec.Data[cfg.APIKeySecretRef.Key]
-	if !ok {
-		return nil, fmt.Errorf("Key %q not found in secret \"%s/%s\"", cfg.APIKeySecretRef.Key, cfg.APIKeySecretRef.LocalObjectReference.Name, namespace)
-	}
-
-	apiKey := string(secBytes)
-
-	// Create provider
-	providerConfig := pdns.NewDefaultConfig()
-
-	// Parse host
-	host, err := url.Parse(cfg.Host)
-	if err != nil {
-		return nil, err
-	}
-
-	providerConfig.Host = host
-	providerConfig.APIKey = apiKey
-
-	if cfg.PropagationTimeout > 0 {
-		providerConfig.PropagationTimeout = time.Duration(cfg.PropagationTimeout) * time.Second
-	}
-
-	if cfg.PollingInterval > 0 {
-		providerConfig.PollingInterval = time.Duration(cfg.PollingInterval) * time.Second
-	}
-
-	if cfg.TTL > 0 {
-		providerConfig.TTL = cfg.TTL
-	}
-
-	if cfg.Timeout > 0 {
-		providerConfig.HTTPClient.Timeout = time.Duration(cfg.Timeout) * time.Second
-	}
-
-	return pdns.NewDNSProviderConfig(providerConfig)
-}
-
 // Present is responsible for actually presenting the DNS record with the
 // DNS provider.
 // This method should tolerate being called multiple times with the same value.
 // cert-manager itself will later perform a self check to ensure that the
 // solver has correctly configured the DNS provider.
 func (c *powerDNSProviderSolver) Present(ch *v1alpha1.ChallengeRequest) error {
-	cfg, err := loadConfig(ch.Config)
+	ctx := context.Background()
+
+	provider, cfg, err := c.init(ch.Config, ch.ResourceNamespace)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed initializing powerdns provider: %v", err)
 	}
 
-	provider, err := c.provider(&cfg, ch.ResourceNamespace)
+	records, err := c.getExistingRecords(ctx, provider, ch.ResolvedZone, ch.ResolvedFQDN)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed loading existing records for %s in domain %s: %v", ch.ResolvedFQDN, ch.ResolvedZone, err)
 	}
 
-	return provider.Present(ch.ResolvedFQDN, ch.Key)
+	// Add the record, only if it doesn't exist already
+	content := quote(ch.Key)
+	if _, ok := findRecord(records, content); !ok {
+		records = append(records, powerdns.Record{Content: &content})
+	}
+
+	txtType := powerdns.RRTypeTXT
+	ttl := uint32(cfg.TTL)
+	changeType := powerdns.ChangeTypeReplace
+	rrset := powerdns.RRset{
+		Name:       &ch.ResolvedFQDN,
+		Type:       &txtType,
+		TTL:        &ttl,
+		ChangeType: &changeType,
+		Records:    records,
+	}
+
+	return provider.Records.Patch(ctx, ch.ResolvedZone, &powerdns.RRsets{Sets: []powerdns.RRset{rrset}})
 }
 
 // CleanUp should delete the relevant TXT record from the DNS provider console.
@@ -183,17 +133,35 @@ func (c *powerDNSProviderSolver) Present(ch *v1alpha1.ChallengeRequest) error {
 // This is in order to facilitate multiple DNS validations for the same domain
 // concurrently.
 func (c *powerDNSProviderSolver) CleanUp(ch *v1alpha1.ChallengeRequest) error {
-	cfg, err := loadConfig(ch.Config)
+	ctx := context.Background()
+
+	provider, cfg, err := c.init(ch.Config, ch.ResourceNamespace)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed initializing powerdns provider: %v", err)
 	}
 
-	provider, err := c.provider(&cfg, ch.ResourceNamespace)
+	records, err := c.getExistingRecords(ctx, provider, ch.ResolvedZone, ch.ResolvedFQDN)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed loading existing records for %s in domain %s: %v", ch.ResolvedFQDN, ch.ResolvedZone, err)
 	}
 
-	return provider.CleanUp(ch.ResolvedFQDN, ch.Key)
+	content := quote(ch.Key)
+	if indx, ok := findRecord(records, content); ok {
+		records = append(records[:indx], records[indx+1:]...)
+	}
+
+	txtType := powerdns.RRTypeTXT
+	ttl := uint32(cfg.TTL)
+	changeType := powerdns.ChangeTypeReplace
+	rrset := powerdns.RRset{
+		Name:       &ch.ResolvedFQDN,
+		Type:       &txtType,
+		TTL:        &ttl,
+		ChangeType: &changeType,
+		Records:    records,
+	}
+
+	return provider.Records.Patch(ctx, ch.ResolvedZone, &powerdns.RRsets{Sets: []powerdns.RRset{rrset}})
 }
 
 // Initialize will be called when the webhook first starts.
@@ -217,8 +185,8 @@ func (c *powerDNSProviderSolver) Initialize(kubeClientConfig *rest.Config, stopC
 
 // loadConfig is a small helper function that decodes JSON configuration into
 // the typed config struct.
-func loadConfig(cfgJSON *extapi.JSON) (powerDNSProviderConfig, error) {
-	cfg := powerDNSProviderConfig{}
+func loadConfig(cfgJSON *apiextensionsv1.JSON) (*powerDNSProviderConfig, error) {
+	cfg := &powerDNSProviderConfig{}
 	// handle the 'base case' where no configuration has been provided
 	if cfgJSON == nil {
 		return cfg, nil
@@ -228,4 +196,65 @@ func loadConfig(cfgJSON *extapi.JSON) (powerDNSProviderConfig, error) {
 	}
 
 	return cfg, nil
+}
+
+func (c *powerDNSProviderSolver) validate(cfg *powerDNSProviderConfig) error {
+	// Check that the host is defined
+	if cfg.Host == "" {
+		return errors.New("no PowerDNS host provided")
+	}
+
+	// Try to load the API key
+	if cfg.APIKeySecretRef.LocalObjectReference.Name == "" {
+		return errors.New("no PowerDNS API key provided")
+	}
+
+	return nil
+}
+
+func (c *powerDNSProviderSolver) init(config *apiextensionsv1.JSON, namespace string) (*powerdns.Client, *powerDNSProviderConfig, error) {
+	// Load and validate the configuration
+	cfg, err := loadConfig(config)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed parsing provider config: %v", err)
+	}
+
+	if err := c.validate(cfg); err != nil {
+		return nil, nil, fmt.Errorf("failed validating config: %v", err)
+	}
+
+	// Load the API key secret
+	sec, err := c.client.CoreV1().Secrets(namespace).Get(context.TODO(), cfg.APIKeySecretRef.LocalObjectReference.Name, metav1.GetOptions{})
+	if err != nil {
+		return nil, cfg, fmt.Errorf("failed loading api key secret %s/%s: %v", namespace, cfg.APIKeySecretRef.LocalObjectReference.Name, err)
+	}
+
+	secBytes, ok := sec.Data[cfg.APIKeySecretRef.Key]
+	if !ok {
+		return nil, cfg, fmt.Errorf("key %q not found in secret \"%s/%s\"", cfg.APIKeySecretRef.Key, cfg.APIKeySecretRef.LocalObjectReference.Name, namespace)
+	}
+
+	apiKey := string(secBytes)
+
+	// Create the client
+	httpClient := &http.Client{}
+	if cfg.Timeout > 0 {
+		httpClient.Timeout = time.Duration(cfg.Timeout) * time.Second
+	}
+
+	return powerdns.NewClient(cfg.Host, "localhost", map[string]string{"X-API-Key": apiKey}, httpClient), cfg, nil
+}
+
+func (c *powerDNSProviderSolver) getExistingRecords(ctx context.Context, provider *powerdns.Client, domain, name string) ([]powerdns.Record, error) {
+	// Find existing records
+	zone, err := provider.Zones.Get(ctx, domain)
+	if err != nil {
+		return nil, fmt.Errorf("failed loading zone %s: %v", domain, err)
+	}
+
+	if rrset := findRRSet(zone.RRsets, powerdns.RRTypeTXT, name); rrset != nil {
+		return rrset.Records, nil
+	}
+
+	return []powerdns.Record{}, nil
 }
