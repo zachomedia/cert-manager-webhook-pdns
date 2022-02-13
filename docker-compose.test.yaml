@@ -3,8 +3,8 @@ services:
   pdns:
     build: testdata/pdns/docker
     ports:
-      - '53:53/udp'
-      - '53:53/tcp'
+      - '127.0.0.1:53:53/udp'
+      - '127.0.0.1:53:53/tcp'
       - '8080:8080'
     volumes:
       - data:/data

@@ -11,6 +11,7 @@ require (
 )
 
 require (
+	github.com/766b/go-outliner v0.0.0-20180511142203-fc6edecdadd7 // indirect
 	github.com/NYTimes/gziphandler v1.1.1 // indirect
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect

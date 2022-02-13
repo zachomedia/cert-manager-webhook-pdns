@@ -12,6 +12,7 @@ import (
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	"k8s.io/klog/v2"
 
 	"github.com/jetstack/cert-manager/pkg/acme/webhook/apis/acme/v1alpha1"
 	"github.com/jetstack/cert-manager/pkg/acme/webhook/cmd"
@@ -96,6 +97,8 @@ func (c *powerDNSProviderSolver) Name() string {
 func (c *powerDNSProviderSolver) Present(ch *v1alpha1.ChallengeRequest) error {
 	ctx := context.Background()
 
+	klog.Infof("Presenting challenge: %s => %s/%s", ch.DNSName, ch.ResolvedZone, ch.ResolvedFQDN)
+
 	provider, cfg, err := c.init(ch.Config, ch.ResourceNamespace)
 	if err != nil {
 		return fmt.Errorf("failed initializing powerdns provider: %v", err)
@@ -134,6 +137,8 @@ func (c *powerDNSProviderSolver) Present(ch *v1alpha1.ChallengeRequest) error {
 // concurrently.
 func (c *powerDNSProviderSolver) CleanUp(ch *v1alpha1.ChallengeRequest) error {
 	ctx := context.Background()
+
+	klog.Infof("Cleaning challenge: %s => %s/%s", ch.DNSName, ch.ResolvedZone, ch.ResolvedFQDN)
 
 	provider, cfg, err := c.init(ch.Config, ch.ResourceNamespace)
 	if err != nil {
