@@ -54,8 +54,6 @@ spec:
               #   all times in seconds
               ttl: 120
               timeout: 30
-              propagationTimeout: 120
-              pollingInterval: 2
 ```
 
 And then you can issue a cert:
