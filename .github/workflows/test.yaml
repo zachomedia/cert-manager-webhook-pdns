@@ -1,0 +1,51 @@
+name: 'Run tests'
+on:
+  - push
+  - pull_request
+
+jobs:
+  # Any checks that run pre-build
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v2
+      -
+        uses: actions/setup-go@v2
+        with:
+          go-version: '1.17.7'
+      -
+        name: Start test infrastructure
+        shell: bash
+        run: |
+          docker-compose -f docker-compose.test.yaml up -d
+      -
+        name: Fetch test binaries
+        shell: bash
+        run: |
+          ./scripts/fetch-test-binaries.sh
+      -
+        name: Run tests
+        shell: bash
+        run: |
+          cat <<EOF > ./testdata/pdns/apikey.yml
+            apiVersion: v1
+            kind: Secret
+            metadata:
+              name: pdns-api-key
+            type: Opaque
+            data:
+              key: dGVzdDEyMw==
+          EOF
+          cat <<EOF > ./testdata/pdns/config.json
+            {
+              "host": "http://127.0.0.1:8080",
+              "apiKeySecretRef": {
+                  "name": "pdns-api-key",
+                  "key": "key"
+              },
+              "ttl": 10
+            }
+          EOF
+          TEST_ASSET_ETCD=_out/kubebuilder/bin/etcd TEST_ASSET_KUBE_APISERVER=_out/kubebuilder/bin/kube-apiserver TEST_ASSET_KUBECTL=_out/kubebuilder/bin/kubectl TEST_DNS_SERVER="127.0.0.1:53" TEST_ZONE_NAME=example.ca. go test .

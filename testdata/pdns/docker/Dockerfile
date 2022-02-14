@@ -1,4 +1,5 @@
-FROM artifacts.zacharyseguin.ca/docker/debian:bullseye-slim
+ARG IMAGE=debian:bullseye-slim
+FROM ${IMAGE}
 
 # Install dependencies
 RUN apt-get update \
