@@ -112,7 +112,8 @@ func (c *powerDNSProviderSolver) Present(ch *v1alpha1.ChallengeRequest) error {
 	// Add the record, only if it doesn't exist already
 	content := quote(ch.Key)
 	if _, ok := findRecord(records, content); !ok {
-		records = append(records, powerdns.Record{Content: &content})
+		disabled := false
+		records = append(records, powerdns.Record{Disabled: &disabled, Content: &content})
 	}
 
 	txtType := powerdns.RRTypeTXT
