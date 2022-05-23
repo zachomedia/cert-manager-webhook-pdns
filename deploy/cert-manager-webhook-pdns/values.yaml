@@ -41,3 +41,6 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+containerSecurityContext: {}
+podSecurityContext: {}

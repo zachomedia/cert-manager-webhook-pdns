@@ -20,6 +20,10 @@ spec:
         release: {{ .Release.Name }}
     spec:
       serviceAccountName: {{ include "cert-manager-webhook-pdns.fullname" . }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ default .Chart.AppVersion .Values.image.tag }}"
@@ -34,6 +38,10 @@ spec:
             - name: https
               containerPort: 443
               protocol: TCP
+          {{- with .Values.containerSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           livenessProbe:
             httpGet:
               scheme: HTTPS
