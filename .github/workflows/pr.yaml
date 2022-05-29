@@ -1,6 +1,8 @@
 name: 'Build pull request'
 on:
-  - pull_request
+  pull_request:
+    paths-ignore:
+      - 'deploy/**'
 
 jobs:
   # Any checks that run pre-build
@@ -23,13 +25,7 @@ jobs:
         with:
           images: zachomedia/cert-manager-webhook-pdns
           labels: |
-            org.opencontainers.image.licenses=https://github.com/zachomedia/ingress-istio-controller/blob/${{ env.GIT_SHA }}/LICENSE
-      -
-        name: Login to DockerHub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+            org.opencontainers.image.licenses=https://github.com/zachomedia/cert-manager-webhook-pdns/blob/${{ env.GIT_SHA }}/LICENSE
       -
         name: Build
         id: docker_build
