@@ -8,14 +8,8 @@ $(shell mkdir -p "$(OUT)")
 setup:
 	./scripts/fetch-test-binaries.sh
 
-verify:	export TEST_ASSET_ETCD=_out/kubebuilder/bin/etcd
-verify:	export TEST_ASSET_KUBE_APISERVER=_out/kubebuilder/bin/kube-apiserver
-verify:	export TEST_ASSET_KUBECTL=_out/kubebuilder/bin/kubectl
-verify:	export TEST_DNS_SERVER="127.0.0.1:53"
-verify:	export TEST_ZONE_NAME=example.ca.
-
 verify:
-	go test .
+	TEST_ASSET_ETCD=_out/kubebuilder/bin/etcd TEST_ASSET_KUBE_APISERVER=_out/kubebuilder/bin/kube-apiserver TEST_ASSET_KUBECTL=_out/kubebuilder/bin/kubectl TEST_DNS_SERVER="127.0.0.1:53" TEST_ZONE_NAME=example.ca. go test .
 
 test: verify
 
