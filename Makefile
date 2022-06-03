@@ -8,7 +8,7 @@ $(shell mkdir -p "$(OUT)")
 setup:
 	./scripts/fetch-test-binaries.sh
 	./scripts/setup-tests.sh
-	docker-compose -f docker-compose.test.yaml up -d
+	docker-compose -f docker-compose.test.yaml up --build -d
 
 clean:
 	rm -rf _out/
