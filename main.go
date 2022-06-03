@@ -71,7 +71,11 @@ type powerDNSProviderSolver struct {
 // be used by your provider here, you should reference a Kubernetes Secret
 // resource and fetch these credentials using a Kubernetes clientset.
 type powerDNSProviderConfig struct {
-	Host            string                    `json:"host"`
+	// Host is the Base URL (e.g. https://dns.example.ca) of the PowerDNS API.
+	Host string `json:"host"`
+
+	// APIKeySecretRef contains the reference information for the Kubernetes
+	// secret which contains the PowerDNS API Key.
 	APIKeySecretRef *cmmeta.SecretKeySelector `json:"apiKeySecretRef"`
 
 	// CABundle is a PEM encoded CA bundle which will be used in
@@ -82,9 +86,14 @@ type powerDNSProviderConfig struct {
 	// +optional
 	CABundle []byte `json:"caBundle"`
 
+	// TTL is the time-to-live value of the inserted DNS records.
+	//
 	// +optional
 	TTL int `json:"ttl"`
 
+	// Timeout is the timeout value for requests to the PowerDNS API.
+	// The value is specified in seconds.
+	//
 	// +optional
 	Timeout int `json:"timeout"`
 }
