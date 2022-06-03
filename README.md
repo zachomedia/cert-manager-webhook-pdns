@@ -45,7 +45,10 @@ spec:
             groupName: acme.zacharyseguin.ca
             solverName: pdns
             config:
+              # Base URL of the PowerDNS server.
               host: https://ns1.example.ca
+
+              # Reference to the Kubernetes secret containing the API key.
               apiKeySecretRef:
                 name: pdns-api-key
                 key: key
@@ -55,7 +58,7 @@ spec:
               ###
 
               # CA bundle for TLS connections
-              # When unset,
+              # When unset, the default system certificate store is used.
               caBundle: BASE64_ENCODE_CA_BUNDLE
 
               # TTL for DNS records
