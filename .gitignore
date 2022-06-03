@@ -23,3 +23,6 @@ apiserver.local.config/
 # Test secrets
 testdata/pdns/config.json
 testdata/pdns/apikey.yml
+
+# Editors
+.vscode/
