@@ -4,4 +4,4 @@ metadata:
   name: pdns-api-key
 type: Opaque
 data:
-  key: YOU_BASE64_ENCODING_API_KEY
+  key: dGVzdDEyMw==

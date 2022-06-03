@@ -12,7 +12,7 @@ var (
 	dnsServer = getEnv("TEST_DNS_SERVER", "8.8.8.8:53")
 )
 
-func TestRunsSuite(t *testing.T) {
+func test(t *testing.T, manifestPath string) {
 	// The manifest path should contain a file named config.json that is a
 	// snippet of valid configuration that should be included on the
 	// ChallengeRequest passed as part of the test cases.
@@ -21,11 +21,19 @@ func TestRunsSuite(t *testing.T) {
 		dns.SetDNSServer(dnsServer),
 		dns.SetResolvedZone(zone),
 		dns.SetAllowAmbientCredentials(false),
-		dns.SetManifestPath("testdata/pdns"),
+		dns.SetManifestPath(manifestPath),
 		dns.SetStrict(true),
 	)
 
 	fixture.RunConformance(t)
+}
+
+func TestRunsSuiteNoTLS(t *testing.T) {
+	test(t, "_out/testdata/no-tls")
+}
+
+func TestRunsSuiteTLS(t *testing.T) {
+	test(t, "_out/testdata/tls")
 }
 
 func getEnv(key, fallback string) string {

@@ -1,7 +1,7 @@
 version: '3.9'
 services:
   pdns:
-    build: testdata/pdns/docker
+    build: testdata/pdns/docker/pdns
     ports:
       - '127.0.0.1:53:53/udp'
       - '127.0.0.1:53:53/tcp'
@@ -10,5 +10,16 @@ services:
       - data:/data
     environment:
       - PDNS_API_KEY=test123
+
+  web:
+    image: nginx:1.21
+    ports:
+      - '8443:8443'
+    volumes:
+      - ./_out/cert.pem:/etc/ssl/cert.pem
+      - ./_out/key.pem:/etc/ssl/key.pem
+      - ./testdata/pdns/docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - pdns
 volumes:
   data: {}
