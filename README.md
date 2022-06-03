@@ -50,9 +50,20 @@ spec:
                 name: pdns-api-key
                 key: key
 
-              # Optional config, shown with default values
-              #   all times in seconds
+              ###
+              ### OPTIONAL
+              ###
+
+              # CA bundle for TLS connections
+              # When unset,
+              caBundle: BASE64_ENCODE_CA_BUNDLE
+
+              # TTL for DNS records
+              # (in seconds)
               ttl: 120
+
+              # Timeout for requests to the PDNS api server
+              # (in seconds)
               timeout: 30
 ```
 

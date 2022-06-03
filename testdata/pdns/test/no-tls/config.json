@@ -1,5 +1,5 @@
 {
-    "host": "https://pdns.example.com",
+    "host": "http://127.0.0.1:8080",
     "apiKeySecretRef": {
         "name": "pdns-api-key",
         "key": "key"

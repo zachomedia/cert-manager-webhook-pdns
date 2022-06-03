@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -71,6 +73,14 @@ type powerDNSProviderSolver struct {
 type powerDNSProviderConfig struct {
 	Host            string                    `json:"host"`
 	APIKeySecretRef *cmmeta.SecretKeySelector `json:"apiKeySecretRef"`
+
+	// CABundle is a PEM encoded CA bundle which will be used in
+	// certificate validation when connecting to the PowerDNS server.
+	//
+	// When left blank, the default system store will be used.
+	//
+	// +optional
+	CABundle []byte `json:"caBundle"`
 
 	// +optional
 	TTL int `json:"ttl"`
@@ -244,8 +254,24 @@ func (c *powerDNSProviderSolver) init(config *apiextensionsv1.JSON, namespace st
 
 	// Create the client
 	httpClient := &http.Client{}
+
+	// If the timeout is configured, then set the timeout
 	if cfg.Timeout > 0 {
 		httpClient.Timeout = time.Duration(cfg.Timeout) * time.Second
+	}
+
+	// If a caBundle is provided, then use it
+	if len(cfg.CABundle) > 0 {
+		caBundle := x509.NewCertPool()
+		if ok := caBundle.AppendCertsFromPEM(cfg.CABundle); !ok {
+			return nil, cfg, fmt.Errorf("failed to load certificate(s) from CA bundle")
+		}
+
+		httpClient.Transport = &http.Transport{
+			TLSClientConfig: &tls.Config{
+				RootCAs: caBundle,
+			},
+		}
 	}
 
 	return powerdns.NewClient(cfg.Host, "localhost", map[string]string{"X-API-Key": apiKey}, httpClient), cfg, nil

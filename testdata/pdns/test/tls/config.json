@@ -1,0 +1,9 @@
+{
+    "host": "https://127.0.0.1:8443",
+    "apiKeySecretRef": {
+        "name": "pdns-api-key",
+        "key": "key"
+    },
+    "ttl": 10,
+    "caBundle": "__CERT__"
+}
