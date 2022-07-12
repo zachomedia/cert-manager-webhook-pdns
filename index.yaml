@@ -2,6 +2,21 @@ apiVersion: v1
 entries:
   cert-manager-webhook-pdns:
   - apiVersion: v2
+    appVersion: v2.1.1
+    created: "2022-07-12T22:24:18.029373611Z"
+    description: Cert Manager Webhook for PowerDNS.
+    digest: 51c555aaa418410b77a4e552a94982507639136c653886ed53abab52f8e83c6b
+    home: https://github.com/zachomedia/cert-manager-webhook-pdns
+    maintainers:
+    - email: zachary@zacharyseguin.ca
+      name: Zachary Seguin
+      url: https://zacharyseguin.ca
+    name: cert-manager-webhook-pdns
+    type: application
+    urls:
+    - https://github.com/zachomedia/cert-manager-webhook-pdns/releases/download/cert-manager-webhook-pdns-2.1.2/cert-manager-webhook-pdns-2.1.2.tgz
+    version: 2.1.2
+  - apiVersion: v2
     appVersion: v2.1.0
     created: "2022-06-03T03:39:34.26204994Z"
     description: Cert Manager Webhook for PowerDNS.
@@ -120,4 +135,4 @@ entries:
     urls:
     - https://github.com/zachomedia/cert-manager-webhook-pdns/releases/download/cert-manager-webhook-pdns-0.3.1/cert-manager-webhook-pdns-0.3.1.tgz
     version: 0.3.1
-generated: "2022-06-03T03:39:34.262676358Z"
+generated: "2022-07-12T22:24:18.029415111Z"
