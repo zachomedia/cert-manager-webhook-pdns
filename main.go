@@ -277,6 +277,7 @@ func (c *powerDNSProviderSolver) init(config *apiextensionsv1.JSON, namespace st
 		}
 
 		httpClient.Transport = &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
 			TLSClientConfig: &tls.Config{
 				RootCAs: caBundle,
 			},
