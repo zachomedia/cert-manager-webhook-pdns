@@ -28,12 +28,20 @@ func test(t *testing.T, manifestPath string) {
 	fixture.RunConformance(t)
 }
 
-func TestRunsSuiteNoTLS(t *testing.T) {
+func TestNoProxyNoTLS(t *testing.T) {
 	test(t, "_out/testdata/no-tls")
 }
 
-func TestRunsSuiteTLS(t *testing.T) {
+func TestNoProxyTLS(t *testing.T) {
 	test(t, "_out/testdata/tls")
+}
+
+func TestProxyNoTLS(t *testing.T) {
+	test(t, "_out/testdata/no-tls-with-proxy")
+}
+
+func TestProxyTLS(t *testing.T) {
+	test(t, "_out/testdata/tls-with-proxy")
 }
 
 func getEnv(key, fallback string) string {
