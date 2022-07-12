@@ -276,11 +276,12 @@ func (c *powerDNSProviderSolver) init(config *apiextensionsv1.JSON, namespace st
 			return nil, cfg, fmt.Errorf("failed to load certificate(s) from CA bundle")
 		}
 
-		httpClient.Transport = &http.Transport{
-			TLSClientConfig: &tls.Config{
-				RootCAs: caBundle,
-			},
+		transport := http.DefaultTransport.(*http.Transport).Clone()
+		transport.TLSClientConfig = &tls.Config{
+			RootCAs: caBundle,
 		}
+
+		httpClient.Transport = transport
 	}
 
 	return powerdns.NewClient(cfg.Host, "localhost", map[string]string{"X-API-Key": apiKey}, httpClient), cfg, nil

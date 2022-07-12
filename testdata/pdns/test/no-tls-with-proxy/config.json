@@ -1,0 +1,8 @@
+{
+    "host": "http://pdns:8080",
+    "apiKeySecretRef": {
+        "name": "pdns-api-key",
+        "key": "key"
+    },
+    "ttl": 10
+}
