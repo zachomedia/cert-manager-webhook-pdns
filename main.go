@@ -284,7 +284,13 @@ func (c *powerDNSProviderSolver) init(config *apiextensionsv1.JSON, namespace st
 		httpClient.Transport = transport
 	}
 
-	return powerdns.NewClient(cfg.Host, "localhost", map[string]string{"X-API-Key": apiKey}, httpClient), cfg, nil
+	// Add request headers
+	headers := map[string]string{
+		"X-API-Key":    apiKey,
+		"Content-Type": "application/json",
+	}
+
+	return powerdns.NewClient(cfg.Host, "localhost", headers, httpClient), cfg, nil
 }
 
 func (c *powerDNSProviderSolver) getExistingRecords(ctx context.Context, provider *powerdns.Client, domain, name string) ([]powerdns.Record, error) {
