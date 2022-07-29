@@ -11,6 +11,8 @@ import (
 	"os"
 	"time"
 
+	"golang.org/x/exp/maps"
+
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -77,6 +79,10 @@ type powerDNSProviderConfig struct {
 	// APIKeySecretRef contains the reference information for the Kubernetes
 	// secret which contains the PowerDNS API Key.
 	APIKeySecretRef *cmmeta.SecretKeySelector `json:"apiKeySecretRef"`
+
+	// Headers are additional headers added to requests to the
+	// PowerDNS API server.
+	Headers map[string]string `json:"headers"`
 
 	// CABundle is a PEM encoded CA bundle which will be used in
 	// certificate validation when connecting to the PowerDNS server.
@@ -289,6 +295,7 @@ func (c *powerDNSProviderSolver) init(config *apiextensionsv1.JSON, namespace st
 		"X-API-Key":    apiKey,
 		"Content-Type": "application/json",
 	}
+	maps.Copy(headers, cfg.Headers)
 
 	return powerdns.NewClient(cfg.Host, "localhost", headers, httpClient), cfg, nil
 }
