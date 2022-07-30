@@ -11,6 +11,8 @@ import (
 	"os"
 	"time"
 
+	"golang.org/x/exp/maps"
+
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -77,6 +79,14 @@ type powerDNSProviderConfig struct {
 	// APIKeySecretRef contains the reference information for the Kubernetes
 	// secret which contains the PowerDNS API Key.
 	APIKeySecretRef *cmmeta.SecretKeySelector `json:"apiKeySecretRef"`
+
+	// ServerID is the server ID in the PowerDNS API.
+	// When unset, defaults to "localhost".
+	ServerID string `json:"serverID"`
+
+	// Headers are additional headers added to requests to the
+	// PowerDNS API server.
+	Headers map[string]string `json:"headers"`
 
 	// CABundle is a PEM encoded CA bundle which will be used in
 	// certificate validation when connecting to the PowerDNS server.
@@ -261,6 +271,11 @@ func (c *powerDNSProviderSolver) init(config *apiextensionsv1.JSON, namespace st
 
 	apiKey := string(secBytes)
 
+	// Set the server ID if it's unset
+	if cfg.ServerID == "" {
+		cfg.ServerID = "localhost"
+	}
+
 	// Create the client
 	httpClient := &http.Client{}
 
@@ -284,7 +299,14 @@ func (c *powerDNSProviderSolver) init(config *apiextensionsv1.JSON, namespace st
 		httpClient.Transport = transport
 	}
 
-	return powerdns.NewClient(cfg.Host, "localhost", map[string]string{"X-API-Key": apiKey}, httpClient), cfg, nil
+	// Add request headers
+	headers := map[string]string{
+		"X-API-Key":    apiKey,
+		"Content-Type": "application/json",
+	}
+	maps.Copy(headers, cfg.Headers)
+
+	return powerdns.NewClient(cfg.Host, cfg.ServerID, headers, httpClient), cfg, nil
 }
 
 func (c *powerDNSProviderSolver) getExistingRecords(ctx context.Context, provider *powerdns.Client, domain, name string) ([]powerdns.Record, error) {

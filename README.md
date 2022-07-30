@@ -57,9 +57,24 @@ spec:
               ### OPTIONAL
               ###
 
+              # Server ID for the PowerDNS API.
+              # When unset, defaults to "localhost".
+              #
+              # This should generally be left unset, and used
+              # only if you have a proxy in front of the PowerDNS API
+              # that requires a different value.
+              serverID: localhost
+
+              # Request headers when connecting to the PowerDNS API.
+              # The following headers are set by default, but can be overriden:
+              #   X-API-Key
+              #   Content-Type
+              headers:
+                key: value
+
               # CA bundle for TLS connections
               # When unset, the default system certificate store is used.
-              caBundle: BASE64_ENCODE_CA_BUNDLE
+              caBundle: BASE64_ENCODED_CA_BUNDLE
 
               # TTL for DNS records
               # (in seconds)
