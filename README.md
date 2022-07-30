@@ -59,6 +59,10 @@ spec:
 
               # Server ID for the PowerDNS API.
               # When unset, defaults to "localhost".
+              #
+              # This should generally be left unset, and used
+              # only if you have a proxy in front of the PowerDNS API
+              # that requires a different value.
               serverID: localhost
 
               # Request headers when connecting to the PowerDNS API.
