@@ -5,7 +5,7 @@ set -e
 #hack_dir=$(dirname ${BASH_SOURCE})
 #source ${hack_dir}/common.sh
 
-k8s_version=1.19.0
+k8s_version=1.24.2
 goarch=amd64
 goos="unknown"
 
