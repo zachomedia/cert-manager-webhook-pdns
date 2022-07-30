@@ -80,6 +80,10 @@ type powerDNSProviderConfig struct {
 	// secret which contains the PowerDNS API Key.
 	APIKeySecretRef *cmmeta.SecretKeySelector `json:"apiKeySecretRef"`
 
+	// ServerID is the server ID in the PowerDNS API.
+	// When unset, defaults to "localhost".
+	ServerID string `json:"serverID"`
+
 	// Headers are additional headers added to requests to the
 	// PowerDNS API server.
 	Headers map[string]string `json:"headers"`
@@ -267,6 +271,11 @@ func (c *powerDNSProviderSolver) init(config *apiextensionsv1.JSON, namespace st
 
 	apiKey := string(secBytes)
 
+	// Set the server ID if it's unset
+	if cfg.ServerID == "" {
+		cfg.ServerID = "localhost"
+	}
+
 	// Create the client
 	httpClient := &http.Client{}
 
@@ -297,7 +306,7 @@ func (c *powerDNSProviderSolver) init(config *apiextensionsv1.JSON, namespace st
 	}
 	maps.Copy(headers, cfg.Headers)
 
-	return powerdns.NewClient(cfg.Host, "localhost", headers, httpClient), cfg, nil
+	return powerdns.NewClient(cfg.Host, cfg.ServerID, headers, httpClient), cfg, nil
 }
 
 func (c *powerDNSProviderSolver) getExistingRecords(ctx context.Context, provider *powerdns.Client, domain, name string) ([]powerdns.Record, error) {
