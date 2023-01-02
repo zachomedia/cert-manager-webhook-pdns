@@ -42,5 +42,8 @@ tolerations: []
 
 affinity: {}
 
-containerSecurityContext: {}
+containerSecurityContext:
+  runAsUser: 100
+  runAsGroup: 100
+
 podSecurityContext: {}
