@@ -25,6 +25,37 @@ If release name contains chart name it will be used as a full name.
 {{- end -}}
 
 {{/*
+Common labels
+*/}}
+{{- define "cert-manager-webhook-pdns.labels" -}}
+helm.sh/chart: {{ include "cert-manager-webhook-pdns.chart" . }}
+{{ include "cert-manager-webhook-pdns.selectorLabels" . }}
+{{- if .Chart.AppVersion }}
+app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+{{- end }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- end }}
+
+{{/*
+Selector labels
+*/}}
+{{- define "cert-manager-webhook-pdns.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "cert-manager-webhook-pdns.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+
+{{/*
+Create the name of the service account to use
+*/}}
+{{- define "cert-manager-webhook-pdns.serviceAccountName" -}}
+{{- if .Values.serviceAccount.create }}
+{{- default (include "cert-manager-webhook-pdns.fullname" .) .Values.serviceAccount.name }}
+{{- else }}
+{{- default "default" .Values.serviceAccount.name }}
+{{- end }}
+{{- end }}
+
+{{/*
 Create chart name and version as used by the chart label.
 */}}
 {{- define "cert-manager-webhook-pdns.chart" -}}

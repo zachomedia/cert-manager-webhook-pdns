@@ -3,23 +3,22 @@ kind: Deployment
 metadata:
   name: {{ include "cert-manager-webhook-pdns.fullname" . }}
   labels:
-    app: {{ include "cert-manager-webhook-pdns.name" . }}
-    chart: {{ include "cert-manager-webhook-pdns.chart" . }}
-    release: {{ .Release.Name }}
-    heritage: {{ .Release.Service }}
+    {{- include "cert-manager-webhook-pdns.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app: {{ include "cert-manager-webhook-pdns.name" . }}
-      release: {{ .Release.Name }}
+      {{- include "cert-manager-webhook-pdns.selectorLabels" . | nindent 6 }}
   template:
     metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       labels:
-        app: {{ include "cert-manager-webhook-pdns.name" . }}
-        release: {{ .Release.Name }}
+        {{- include "cert-manager-webhook-pdns.labels" . | nindent 8 }}
     spec:
-      serviceAccountName: {{ include "cert-manager-webhook-pdns.fullname" . }}
+      serviceAccountName: {{ include "cert-manager-webhook-pdns.serviceAccountName" . }}
       {{- with .Values.podSecurityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}
