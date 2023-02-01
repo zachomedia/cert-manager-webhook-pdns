@@ -3,10 +3,7 @@ kind: Service
 metadata:
   name: {{ include "cert-manager-webhook-pdns.fullname" . }}
   labels:
-    app: {{ include "cert-manager-webhook-pdns.name" . }}
-    chart: {{ include "cert-manager-webhook-pdns.chart" . }}
-    release: {{ .Release.Name }}
-    heritage: {{ .Release.Service }}
+    {{- include "cert-manager-webhook-pdns.labels" . | nindent 4 }}
 spec:
   type: {{ .Values.service.type }}
   ports:
@@ -15,5 +12,4 @@ spec:
       protocol: TCP
       name: https
   selector:
-    app: {{ include "cert-manager-webhook-pdns.name" . }}
-    release: {{ .Release.Name }}
+    {{- include "cert-manager-webhook-pdns.selectorLabels" . | nindent 4 }}
