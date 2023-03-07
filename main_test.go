@@ -50,3 +50,28 @@ func getEnv(key, fallback string) string {
 	}
 	return fallback
 }
+
+func TestIsAllowedZones(t *testing.T) {
+	cfg := powerDNSProviderConfig{
+		AllowedZones: []string{"example.com.", "example.org."},
+	}
+
+	tests := []struct {
+		zone    string
+		matched bool
+	}{
+		{"foo.example.com.", true},
+		{"foo.example.net.", false},
+		{"example.com.", true},
+		{"notexample.com.", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.zone, func(t *testing.T) {
+			match := cfg.IsAllowedZone(tt.zone)
+			if match != tt.matched {
+				t.Errorf("Unexpected IsAllowedZone(%s) = %t, expected %t", tt.zone, match, tt.matched)
+			}
+		})
+	}
+}
