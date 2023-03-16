@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"golang.org/x/exp/maps"
@@ -106,6 +107,25 @@ type powerDNSProviderConfig struct {
 	//
 	// +optional
 	Timeout int `json:"timeout"`
+
+	// AllowedZones is the list of zones that may be edited. If the list is
+	// empty, all zones are permitted.
+	AllowedZones []string `json:"allowed-zones"`
+}
+
+// IsAllowedZone checks if the webhook is allowed to edit the given zone, per
+// AllowedZones setting. All zones allowed if AllowedZones is empty (the default setting)
+func (cfg powerDNSProviderConfig) IsAllowedZone(zone string) bool {
+	if len(cfg.AllowedZones) == 0 {
+		return true
+	}
+
+	for _, allowed := range cfg.AllowedZones {
+		if zone == allowed || strings.HasSuffix(zone, "."+allowed) {
+			return true
+		}
+	}
+	return false
 }
 
 // Name is used as the name for this DNS solver when referencing it on the ACME
@@ -131,6 +151,10 @@ func (c *powerDNSProviderSolver) Present(ch *v1alpha1.ChallengeRequest) error {
 	provider, cfg, err := c.init(ch.Config, ch.ResourceNamespace)
 	if err != nil {
 		return fmt.Errorf("failed initializing powerdns provider: %v", err)
+	}
+
+	if !cfg.IsAllowedZone(ch.ResolvedZone) {
+		return fmt.Errorf("zone %s may not be edited per config (allowed zones are %v)", ch.ResolvedZone, cfg.AllowedZones)
 	}
 
 	records, err := c.getExistingRecords(ctx, provider, ch.ResolvedZone, ch.ResolvedFQDN)

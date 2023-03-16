@@ -83,6 +83,15 @@ spec:
               # Timeout for requests to the PDNS api server
               # (in seconds)
               timeout: 30
+
+              # If the server is only allowed to edit certain zones; the
+              # default is an empty list, allowing everything.
+              # *IMPORTANT*: Remember the trailing dot to make the zone-name
+              # fully qualified.
+              allowed-zones:
+                - example.com.
+                - example.org.
+                - example.net.
 ```
 
 And then you can issue a cert:
