@@ -146,7 +146,7 @@ func (c *powerDNSProviderSolver) Name() string {
 func (c *powerDNSProviderSolver) Present(ch *v1alpha1.ChallengeRequest) error {
 	ctx := context.Background()
 
-	klog.Infof("Presenting challenge: %s => %s/%s", ch.DNSName, ch.ResolvedZone, ch.ResolvedFQDN)
+	klog.InfoS("Presenting challenge", "dnsName", ch.DNSName, "resolvedZone", ch.ResolvedZone, "resolvedFQDN", ch.ResolvedFQDN)
 
 	provider, cfg, err := c.init(ch.Config, ch.ResourceNamespace)
 	if err != nil {
@@ -192,7 +192,7 @@ func (c *powerDNSProviderSolver) Present(ch *v1alpha1.ChallengeRequest) error {
 func (c *powerDNSProviderSolver) CleanUp(ch *v1alpha1.ChallengeRequest) error {
 	ctx := context.Background()
 
-	klog.Infof("Cleaning challenge: %s => %s/%s", ch.DNSName, ch.ResolvedZone, ch.ResolvedFQDN)
+	klog.InfoS("Cleaning challenge", "dnsName", ch.DNSName, "resolvedZone", ch.ResolvedZone, "resolvedFQDN", ch.ResolvedFQDN)
 
 	provider, cfg, err := c.init(ch.Config, ch.ResourceNamespace)
 	if err != nil {
