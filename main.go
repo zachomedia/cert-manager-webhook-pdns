@@ -264,7 +264,7 @@ func (c *powerDNSProviderSolver) validate(cfg *powerDNSProviderConfig) error {
 	}
 
 	// Try to load the API key
-	if cfg.APIKeySecretRef.LocalObjectReference.Name == "" {
+	if cfg.APIKeySecretRef == nil || cfg.APIKeySecretRef.LocalObjectReference.Name == "" {
 		return errors.New("no PowerDNS API key provided")
 	}
 
