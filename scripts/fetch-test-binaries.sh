@@ -6,14 +6,8 @@ set -e
 #source ${hack_dir}/common.sh
 
 k8s_version=1.26.1
-goarch=amd64
-goos="unknown"
-
-if [[ "$OSTYPE" == "linux-gnu" ]]; then
-  goos="linux"
-elif [[ "$OSTYPE" == "darwin"* ]]; then
-  goos="darwin"
-fi
+goarch=$(go env GOARCH)
+goos=$(go env GOOS)
 
 if [[ "$goos" == "unknown" ]]; then
   echo "OS '$OSTYPE' not supported. Aborting." >&2
