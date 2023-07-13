@@ -32,8 +32,16 @@ func TestNoProxyNoTLS(t *testing.T) {
 	test(t, "_out/testdata/no-tls")
 }
 
+func TestNoProxyNoTLSAuthHdr(t *testing.T) {
+	test(t, "_out/testdata/no-tls-auth-hdr")
+}
+
 func TestNoProxyTLS(t *testing.T) {
 	test(t, "_out/testdata/tls")
+}
+
+func TestNoProxyTLSAuthHdr(t *testing.T) {
+	test(t, "_out/testdata/tls-auth-hdr")
 }
 
 func TestProxyNoTLS(t *testing.T) {
