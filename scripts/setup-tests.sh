@@ -21,14 +21,14 @@ EOF
 
 openssl req -x509 -config _out/openssl.conf -newkey rsa:4096 -keyout _out/key.pem -out _out/cert.pem -sha256 -days 30 -nodes -subj '/CN=localhost'
 
-for suite in tls tls-with-proxy; do
+for suite in tls tls-with-proxy tls-auth-hdr; do
   mkdir -p _out/testdata/${suite}
   cp testdata/pdns/test/${suite}/apikey.yml _out/testdata/${suite}/apikey.yml
   sed "s#__CERT__#$(base64 -w0 _out/cert.pem)#g" testdata/pdns/test/${suite}/config.json > _out/testdata/${suite}/config.json
 done
 
 # No TLS
-for suite in no-tls no-tls-with-proxy; do
+for suite in no-tls no-tls-with-proxy no-tls-auth-hdr; do
   mkdir -p _out/testdata/${suite}
   cp testdata/pdns/test/${suite}/{config.json,apikey.yml} _out/testdata/${suite}
 done
