@@ -28,6 +28,11 @@ import (
 	"github.com/joeig/go-powerdns/v3"
 )
 
+const (
+	defaultAuthHeader = "X-API-Key"
+	defaultScheme     = ""
+)
+
 var GroupName = os.Getenv("GROUP_NAME")
 
 func main() {
@@ -80,6 +85,17 @@ type powerDNSProviderConfig struct {
 	// APIKeySecretRef contains the reference information for the Kubernetes
 	// secret which contains the PowerDNS API Key.
 	APIKeySecretRef *cmmeta.SecretKeySelector `json:"apiKeySecretRef"`
+
+	// Scheme supports HTTP AuthSchemes
+	// https://www.iana.org/assignments/http-authschemes/http-authschemes.xhtml
+	//
+	// +optional default ""
+	APIKeyScheme string `json:"apiKeyScheme"`
+
+	// APIKeyHeaderName is the header name where apiKey will be set
+	//
+	// +optional default "X-API-Key"
+	APIKeyHeaderName string `json:"apiKeyHeaderName"`
 
 	// ServerID is the server ID in the PowerDNS API.
 	// When unset, defaults to "localhost".
@@ -245,7 +261,10 @@ func (c *powerDNSProviderSolver) Initialize(kubeClientConfig *rest.Config, stopC
 // loadConfig is a small helper function that decodes JSON configuration into
 // the typed config struct.
 func loadConfig(cfgJSON *apiextensionsv1.JSON) (*powerDNSProviderConfig, error) {
-	cfg := &powerDNSProviderConfig{}
+	cfg := &powerDNSProviderConfig{
+		APIKeyScheme:     defaultScheme,
+		APIKeyHeaderName: defaultAuthHeader,
+	}
 	// handle the 'base case' where no configuration has been provided
 	if cfgJSON == nil {
 		return cfg, nil
@@ -325,7 +344,9 @@ func (c *powerDNSProviderSolver) init(config *apiextensionsv1.JSON, namespace st
 
 	// Add request headers
 	headers := map[string]string{
-		"X-API-Key":    apiKey,
+		cfg.APIKeyHeaderName: strings.TrimLeft(
+			strings.Trim(cfg.APIKeyScheme, " ")+" "+apiKey,
+			" "),
 		"Content-Type": "application/json",
 	}
 	maps.Copy(headers, cfg.Headers)

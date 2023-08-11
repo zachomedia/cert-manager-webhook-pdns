@@ -57,6 +57,16 @@ spec:
               ### OPTIONAL
               ###
 
+              # API Key scheme https://www.iana.org/assignments/http-authschemes/http-authschemes.xhtml
+              # default: no scheme ""
+              apiKeyScheme: ""
+
+              # Header name for API key
+              #
+              # This defaults to X-API-Key when unset but supports customizations
+              # e.g. Authorization 
+              apiKeyHeaderName: ""
+
               # Server ID for the PowerDNS API.
               # When unset, defaults to "localhost".
               #
