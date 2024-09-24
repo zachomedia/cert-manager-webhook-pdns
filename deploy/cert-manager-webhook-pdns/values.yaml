@@ -60,3 +60,13 @@ podAnnotations: {}
 podSecurityContext: {}
 
 priorityClassName: ""
+
+# Configures the HTTP_PROXY environment variable where a HTTP proxy is required.
+# http_proxy: "http://proxy:8080"
+
+# Configures the HTTPS_PROXY environment variable where a HTTP proxy is required.
+# https_proxy: "https://proxy:8080"
+
+# Configures the NO_PROXY environment variable where a HTTP proxy is required,
+# but certain domains should be excluded.
+# no_proxy: 127.0.0.1,localhost
