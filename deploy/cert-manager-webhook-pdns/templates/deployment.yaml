@@ -27,7 +27,7 @@ spec:
       priorityClassName: {{ . | quote }}
       {{- end }}
       {{- if .Values.imagePullSecrets }}
-      imagePullSecrets: {{ toYaml .Values.imagePullSecrets | nindent 6 }}
+      imagePullSecrets: {{ toYaml .Values.imagePullSecrets | nindent 8 }}
       {{- end }}
       containers:
         - name: {{ .Chart.Name }}
