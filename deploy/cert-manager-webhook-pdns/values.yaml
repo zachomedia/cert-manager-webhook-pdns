@@ -66,6 +66,12 @@ podSecurityContext: {}
 
 priorityClassName: ""
 
+# Additional volumes to add to the cert-manager-webhook-pdns pod.
+volumes: []
+
+# Additional volume mounts to add to the cert-manager-webhook-pdns pod.
+volumeMounts: []
+
 # Configures the HTTP_PROXY environment variable where a HTTP proxy is required.
 # http_proxy: "http://proxy:8080"
 

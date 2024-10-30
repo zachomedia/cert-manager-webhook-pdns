@@ -74,12 +74,18 @@ spec:
             - name: certs
               mountPath: /tls
               readOnly: true
+            {{- with .Values.volumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
           resources:
 {{ toYaml .Values.resources | indent 12 }}
       volumes:
         - name: certs
           secret:
             secretName: {{ include "cert-manager-webhook-pdns.servingCertificate" . }}
+        {{- with .Values.volumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
     {{- with .Values.nodeSelector }}
       nodeSelector:
 {{ toYaml . | indent 8 }}
