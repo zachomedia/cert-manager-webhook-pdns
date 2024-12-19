@@ -1,4 +1,4 @@
-ARG IMAGE=debian:bullseye-slim
+ARG IMAGE=debian:bookworm-slim
 FROM ${IMAGE}
 
 # Install dependencies
@@ -7,7 +7,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/
 
 # Configure repository
-RUN echo 'deb [arch=amd64] http://repo.powerdns.com/debian bullseye-auth-46 main' > /etc/apt/sources.list.d/powerdns.list \
+RUN echo 'deb [arch=amd64] http://repo.powerdns.com/debian bookworm-auth-49 main' > /etc/apt/sources.list.d/powerdns.list \
     && echo 'Package: pdns-*' > /etc/apt/preferences.d/powerdns \
     && echo 'Pin: origin repo.powerdns.com' >> /etc/apt/preferences.d/powerdns \
     && echo 'Pin-Priority: 600' >> /etc/apt/preferences.d/powerdns \

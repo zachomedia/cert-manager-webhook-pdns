@@ -5,7 +5,7 @@ set -e
 #hack_dir=$(dirname ${BASH_SOURCE})
 #source ${hack_dir}/common.sh
 
-k8s_version=1.26.1
+k8s_version=1.31.0
 goarch=$(go env GOARCH)
 goos=$(go env GOOS)
 
@@ -15,7 +15,7 @@ if [[ "$goos" == "unknown" ]]; then
 fi
 
 tmp_root=./_out
-kb_root_dir=$tmp_root/kubebuilder
+kb_root_dir=$tmp_root/controller-tools/envtest
 
 # Turn colors in this script off by setting the NO_COLOR variable in your
 # environment to any value:
@@ -38,8 +38,8 @@ function header_text {
 function fetch_kb_tools {
   header_text "fetching tools"
   mkdir -p $tmp_root
-  kb_tools_archive_name="kubebuilder-tools-$k8s_version-$goos-$goarch.tar.gz"
-  kb_tools_download_url="https://storage.googleapis.com/kubebuilder-tools/$kb_tools_archive_name"
+  kb_tools_archive_name="envtest-v$k8s_version-$goos-$goarch.tar.gz"
+  kb_tools_download_url="https://github.com/kubernetes-sigs/controller-tools/releases/download/envtest-v$k8s_version/$kb_tools_archive_name"
 
   kb_tools_archive_path="$tmp_root/$kb_tools_archive_name"
   if [ ! -f $kb_tools_archive_path ]; then
@@ -51,5 +51,5 @@ function fetch_kb_tools {
 header_text "using tools"
 fetch_kb_tools
 
-header_text "kubebuilder tools (etcd, kubectl, kube-apiserver)used to perform local tests installed under $tmp_root/kubebuilder/bin/"
+header_text "kubebuilder tools (etcd, kubectl, kube-apiserver)used to perform local tests installed under $kb_root_dir"
 exit 0
