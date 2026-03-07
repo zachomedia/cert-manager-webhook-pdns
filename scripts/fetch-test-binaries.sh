@@ -5,7 +5,7 @@ set -e
 #hack_dir=$(dirname ${BASH_SOURCE})
 #source ${hack_dir}/common.sh
 
-k8s_version=1.33.0
+k8s_version=1.35.0
 goarch=$(go env GOARCH)
 goos=$(go env GOOS)
 
