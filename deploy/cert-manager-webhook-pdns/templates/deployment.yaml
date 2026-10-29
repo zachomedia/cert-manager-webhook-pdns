@@ -29,6 +29,10 @@ spec:
       {{- if .Values.imagePullSecrets }}
       imagePullSecrets: {{ toYaml .Values.imagePullSecrets | nindent 8 }}
       {{- end }}
+      {{- with .Values.initContainers }}
+      initContainers:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ default .Chart.AppVersion .Values.image.tag }}"
@@ -37,6 +41,12 @@ spec:
             - --tls-cert-file=/tls/tls.crt
             - --tls-private-key-file=/tls/tls.key
             - --secure-port=8443
+            {{- with .Values.pdnsClientCertFile }}
+            - --pdns-client-cert-file={{ . }}
+            {{- end }}
+            {{- with .Values.pdnsClientKeyFile }}
+            - --pdns-client-key-file={{ . }}
+            {{- end }}
           env:
             - name: GROUP_NAME
               value: {{ .Values.groupName | quote }}

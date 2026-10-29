@@ -21,6 +21,7 @@ import (
 
 	"github.com/cert-manager/cert-manager/pkg/acme/webhook/apis/acme/v1alpha1"
 	"github.com/cert-manager/cert-manager/pkg/acme/webhook/cmd"
+	"github.com/spf13/pflag"
 
 	cmmeta "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -35,7 +36,12 @@ const (
 
 var GroupName = os.Getenv("GROUP_NAME")
 
+var clientCertFile, clientKeyFile string
+
 func main() {
+	pflag.StringVar(&clientCertFile, "pdns-client-cert-file", "", "PEM client certificate file for the PowerDNS API (requires --pdns-client-key-file)")
+	pflag.StringVar(&clientKeyFile, "pdns-client-key-file", "", "PEM client private key file for the PowerDNS API (requires --pdns-client-cert-file)")
+
 	if GroupName == "" {
 		panic("GROUP_NAME must be specified")
 	}
@@ -276,6 +282,20 @@ func loadConfig(cfgJSON *apiextensionsv1.JSON) (*powerDNSProviderConfig, error) 
 	return cfg, nil
 }
 
+func loadClientTLSConfig(certFile, keyFile string) (*tls.Config, error) {
+	if certFile == "" && keyFile == "" {
+		return nil, nil
+	}
+	if certFile == "" || keyFile == "" {
+		return nil, errors.New("both --pdns-client-cert-file and --pdns-client-key-file must be provided")
+	}
+	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
+	if err != nil {
+		return nil, fmt.Errorf("failed loading PowerDNS client certificate and key: %w", err)
+	}
+	return &tls.Config{Certificates: []tls.Certificate{cert}}, nil
+}
+
 func (c *powerDNSProviderSolver) validate(cfg *powerDNSProviderConfig) error {
 	// Check that the host is defined
 	if cfg.Host == "" {
@@ -321,6 +341,10 @@ func (c *powerDNSProviderSolver) init(config *apiextensionsv1.JSON, namespace st
 
 	// Create the client
 	httpClient := &http.Client{}
+	tlsConfig, err := loadClientTLSConfig(clientCertFile, clientKeyFile)
+	if err != nil {
+		return nil, cfg, err
+	}
 
 	// If the timeout is configured, then set the timeout
 	if cfg.Timeout > 0 {
@@ -334,11 +358,15 @@ func (c *powerDNSProviderSolver) init(config *apiextensionsv1.JSON, namespace st
 			return nil, cfg, fmt.Errorf("failed to load certificate(s) from CA bundle")
 		}
 
-		transport := http.DefaultTransport.(*http.Transport).Clone()
-		transport.TLSClientConfig = &tls.Config{
-			RootCAs: caBundle,
+		if tlsConfig == nil {
+			tlsConfig = &tls.Config{}
 		}
+		tlsConfig.RootCAs = caBundle
+	}
 
+	if tlsConfig != nil {
+		transport := http.DefaultTransport.(*http.Transport).Clone()
+		transport.TLSClientConfig = tlsConfig
 		httpClient.Transport = transport
 	}
 

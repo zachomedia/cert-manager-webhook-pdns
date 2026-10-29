@@ -25,6 +25,9 @@ imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
 
+pdnsClientCertFile: ""
+pdnsClientKeyFile: ""
+
 serviceAccount:
   # Specifies whether a service account should be created
   create: true
@@ -65,6 +68,8 @@ podAnnotations: {}
 podSecurityContext: {}
 
 priorityClassName: ""
+
+initContainers: []
 
 # Additional volumes to add to the cert-manager-webhook-pdns pod.
 volumes: []

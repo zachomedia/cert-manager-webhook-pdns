@@ -1,7 +1,12 @@
 package main
 
 import (
+	"crypto/x509"
+	"encoding/pem"
+	"net/http"
+	"net/http/httptest"
 	"os"
+	"path/filepath"
 	"testing"
 
 	dns "github.com/cert-manager/cert-manager/test/acme"
@@ -57,6 +62,52 @@ func getEnv(key, fallback string) string {
 		return value
 	}
 	return fallback
+}
+
+func TestLoadClientTLSConfigValid(t *testing.T) {
+	server := httptest.NewTLSServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {}))
+	defer server.Close()
+	cert := server.TLS.Certificates[0]
+	key, err := x509.MarshalPKCS8PrivateKey(cert.PrivateKey)
+	if err != nil {
+		t.Fatal(err)
+	}
+	certFile, keyFile := filepath.Join(t.TempDir(), "cert.pem"), filepath.Join(t.TempDir(), "key.pem")
+	if err := os.WriteFile(certFile, pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: cert.Certificate[0]}), 0600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(keyFile, pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: key}), 0600); err != nil {
+		t.Fatal(err)
+	}
+	cfg, err := loadClientTLSConfig(certFile, keyFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg == nil || len(cfg.Certificates) != 1 {
+		t.Fatal("expected a TLS config with one client certificate")
+	}
+}
+
+func TestLoadClientTLSConfig(t *testing.T) {
+	for _, tt := range []struct {
+		name, cert, key string
+		wantErr         bool
+	}{
+		{name: "disabled"},
+		{name: "missing key", cert: "cert.pem", wantErr: true},
+		{name: "missing cert", key: "key.pem", wantErr: true},
+		{name: "missing files", cert: "missing-cert.pem", key: "missing-key.pem", wantErr: true},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg, err := loadClientTLSConfig(tt.cert, tt.key)
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if cfg != nil {
+				t.Fatal("expected no TLS config")
+			}
+		})
+	}
 }
 
 func TestIsAllowedZones(t *testing.T) {
